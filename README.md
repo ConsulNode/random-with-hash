@@ -1,2 +1,2 @@
 # random
-Script for choosing a random wallet from the list of delegators
+Script for choosing a wallet from the list of delegators based on block hash
