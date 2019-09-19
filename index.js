@@ -21,22 +21,22 @@ cron.schedule(process.env.CRON, () => {
 });
 
 
-let latestBlock = {};
+let chosenBlock = {};
 let coins = [];
 let validator = {};
 
 
 async function chooseWinner() {
-  latestBlock = {};
+  chosenBlock = {};
   coins = [];
   validator = {};
 
-  latestBlock = await getLatestBlock();
+  chosenBlock = await getBlock();
   coins = await getCoins();
-  validator = await getDelegators(latestBlock.height, coins);
+  validator = await getDelegators(chosenBlock.height, coins);
 
-  if (validator.delegators.length > 0) {
-    const hashNumber = parseInt(latestBlock.hash.substring(2, 6), 16);
+  if (validator.delegators.length > 0 && chosenBlock.hash) {
+    const hashNumber = parseInt(chosenBlock.hash.substring(2, 6), 16);
     const winnerIndex = hashNumber % validator.delegators.length;
     const winner = validator.delegators[winnerIndex];
 
@@ -45,25 +45,36 @@ async function chooseWinner() {
     if (new Date().getDate() === 27) rewardForWinner = 5000;
 
     // Send message via Telegram Bot
-    sendFeed(`${new Date().toISOString().split('T')[0]}\r\nБлок: ${latestBlock.height}\r\n\r\n🎁 Подарочные ${rewardForWinner} BIP будут зачислены\r\nⓂ️ ${winner.address}`);
+    sendFeed(`${new Date().toISOString().split('T')[0]}\r\nБлок: ${chosenBlock.height}\r\n\r\n🎁 Подарочные ${rewardForWinner} BIP будут зачислены\r\nⓂ️ ${winner.address}`);
   }
 };
 
 
-function getLatestBlock() {
+function getBlock() {
   return new Promise(resolve => {
-    let latestBlock = {};
+    let chosenBlock = {};
 
     axios.get(`${EXPLORER_API}blocks`)
       .then(response => {
-        const block = response.data.data[0];
+        const blocks = response.data.data;
 
-        latestBlock = {
-          height: block.height,
-          hash: block.hash,
-        };
+        // Find first block after needed timestamp
+        let i = 0;
+        for (let block of blocks) {
+          // 18 is hours number in UTC
+          if (block.timestamp.split('T')[1].split(':')[0] < 18) {
+            chosenBlock = {
+              height: blocks[i - 1].height,
+              hash: blocks[i - 1].hash,
+              timestamp: blocks[i - 1].timestamp,
+            };
+            break;
+          }
 
-        resolve(latestBlock);
+          i++;
+        }
+
+        resolve(chosenBlock);
       })
       .catch(error => {
         console.log(error);
@@ -87,12 +98,12 @@ function getCoins() {
   });
 };
 
-function getDelegators(latestBlockHeight, coins) {
+function getDelegators(chosenBlockHeight, coins) {
   return new Promise(resolve => {
     let delegators = [];
 
     const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-    axios.get(`${CONSULNODE_API}${latestBlockHeight}`, { httpsAgent })
+    axios.get(`${CONSULNODE_API}${chosenBlockHeight}`, { httpsAgent })
       .then(response => {
         // Change stakes to float numbers
         const stakes = response.data.result.stakes.map(stake => {
