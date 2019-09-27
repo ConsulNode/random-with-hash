@@ -115,7 +115,7 @@ function getDelegators(chosenBlockHeight, coins) {
 
         // Combine different stakes from the same wallet
         stakes.forEach(item => {
-          if (verifyCoin(item.coin, coins)) {
+          if (item.bip_value > 0 && verifyCoin(item.coin, coins)) {
             const index = delegators.findIndex(i => i.address === item.owner);
 
             if (index === -1) {
