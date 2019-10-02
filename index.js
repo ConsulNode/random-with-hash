@@ -36,9 +36,12 @@ async function chooseWinner() {
   validator = await getDelegators(chosenBlock.height, coins);
 
   if (validator.delegators.length > 0 && chosenBlock.hash) {
+    // Filter out delegators with total value less than 1000
+    const delegatorsForRaffle = validator.delegators.filter(i => i.total_value >= 1000);
+    
     const hashNumber = parseInt(chosenBlock.hash.substring(2, 6), 16);
-    const winnerIndex = hashNumber % validator.delegators.length;
-    const winner = validator.delegators[winnerIndex];
+    const winnerIndex = hashNumber % delegatorsForRaffle.length;
+    const winner = delegatorsForRaffle[winnerIndex];
 
     let rewardForWinner = 500;
     if (new Date().getDay() === 5) rewardForWinner = 1000;
