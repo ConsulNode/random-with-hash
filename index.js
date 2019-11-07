@@ -160,6 +160,6 @@ function getDelegators(chosenBlockHeight, coins) {
 
 function verifyCoin(coin, coins) {
   if (coin === 'BIP') return true;
-  if (coins.find(item => item.symbol === coin).crr >= 50) return true;
+  if (coins.find(item => item.symbol === coin).crr >= 40) return true;
   return false;
 };
