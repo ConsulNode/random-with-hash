@@ -1,4 +1,4 @@
-# Random
+# Random with hash
 Script for choosing a random wallet from the list of delegators based on the block hash.
 
 **Steps**  
